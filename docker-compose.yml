@@ -1,0 +1,50 @@
+version: '3.7'
+
+services:
+  rosariosis_db:
+    image: mysql:5.7
+    container_name: rosariosis_db
+    ports:
+     - "3306:3306"
+    volumes:
+     - ./database/rosariosis_ready.sql:/docker-entrypoint-initdb.d/rosariosis_ready.sql
+    environment:
+      MYSQL_ROOT_PASSWORD: f1ed83b1-067b-4107-a46c-504f290c8244
+      MYSQL_USER: rosariosis_user
+      MYSQL_PASSWORD: 48b3ed00-af41-4cab-b2a7-109061728064
+      MYSQL_DATABASE: rosariosis
+      TZ: America/Lima
+    networks:
+      - rosariosis_network
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  rosariosis:
+    build: 
+      context: .
+      dockerfile: Dockerfile_dev
+    container_name: rosariosis
+    ports:
+     - "80:80"
+    environment:
+      LOCALE: es_ES.utf8
+      DB_ENGINE: mysql
+      DB_HOST: host.docker.internal
+      DB_NAME: rosariosis
+      DB_USER: rosariosis_user
+      DB_PASSWORD: 48b3ed00-af41-4cab-b2a7-109061728064
+      DB_PORT: 3306
+      TZ: America/Lima
+    networks:
+      - rosariosis_network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+        rosariosis_db:
+            condition: service_healthy
+
+networks:
+  rosariosis_network:
+    driver: bridge
