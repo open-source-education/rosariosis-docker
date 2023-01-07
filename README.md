@@ -1,0 +1,1 @@
+# rosariosis-docker
